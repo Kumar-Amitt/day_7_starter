@@ -1,5 +1,8 @@
+import 'package:day_5_starter/quiz_brain.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:rflutter_alert/rflutter_alert.dart';
+//import 'package:day_7_starter/quiz_brain.dart';
 
 void main() {
   runApp(Quizlr());
@@ -10,14 +13,14 @@ class Quizlr extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
         home: Scaffold(
-          backgroundColor: Colors.grey.shade900,
-          body: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: QuizPage(),
-            ),
-          ),
-        ));
+      backgroundColor: Colors.grey.shade900,
+      body: SafeArea(
+        child: Padding(
+          padding: EdgeInsets.symmetric(horizontal: 10.0),
+          child: QuizPage(),
+        ),
+      ),
+    ));
   }
 }
 
@@ -27,6 +30,58 @@ class QuizPage extends StatefulWidget {
 }
 
 class _QuizPageState extends State<QuizPage> {
+  List<Icon> scoreKeeper = [];
+  QuizBrain brain = QuizBrain();
+
+  int score = 0;
+  int currQues = 0;
+
+  void resetQuestion() {
+    setState(() {
+      brain.questionNumber = 0;
+      score = 0;
+      currQues = 0;
+      scoreKeeper = [];
+
+    });
+  }
+
+  void checkAnswer(bool userAnswer) {
+    setState(() {
+
+      if(currQues < brain.question.length) {
+        if (brain.checkAnswer(userAnswer)) {
+          scoreKeeper.add(Icon(
+            Icons.check,
+            color: Colors.green,
+          ));
+          score++;
+        } else {
+          scoreKeeper.add(Icon(
+            Icons.close,
+            color: Colors.red,
+          ));
+        }
+        currQues ++;
+      }
+      if (currQues+1 > brain.question.length) {
+        Alert(
+            context: context,
+            title: "Quiz Completed",
+            desc:
+            "You have reached end of the quiz and scored $score/${brain.question.length}",
+            buttons: [
+              DialogButton(
+                child: Text('Restart'),
+                onPressed: resetQuestion,
+              )
+            ]).show();
+      }
+      else if (currQues +1 < brain.question.length)
+        brain.nextQuestion();
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -39,7 +94,7 @@ class _QuizPageState extends State<QuizPage> {
             padding: EdgeInsets.all(10.0),
             child: Center(
               child: Text(
-                'This is where the question text will go',
+                brain.getCurrentQuestion().questionText,
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 24.0,
@@ -53,17 +108,18 @@ class _QuizPageState extends State<QuizPage> {
           child: Padding(
             padding: EdgeInsets.all(10.0),
             child: FlatButton(
-              textColor: Colors.white,
-              color: Colors.green,
-              child: Text(
-                'True',
-                style: TextStyle(
-                  fontSize: 20.0,
-                  color: Colors.white,
+                textColor: Colors.white,
+                color: Colors.green,
+                child: Text(
+                  'True',
+                  style: TextStyle(
+                    fontSize: 20.0,
+                    color: Colors.white,
+                  ),
                 ),
-              ),
-              onPressed: () {},
-            ),
+                onPressed: () {
+                  checkAnswer(true);
+                }),
           ),
         ),
         Expanded(
@@ -79,16 +135,19 @@ class _QuizPageState extends State<QuizPage> {
                   color: Colors.white,
                 ),
               ),
-              onPressed: () {},
+              onPressed: () {
+                checkAnswer(false);
+              },
             ),
           ),
         ),
-        // TODO a row here to keep the scores
+        Row(
+          children: scoreKeeper,
+        )
       ],
     );
   }
 }
-
 
 // Sample Questions and Answers
 // Q.1 Amartya Sen was awarded the Nobel prize for his contribution to Welfare Economics., true
